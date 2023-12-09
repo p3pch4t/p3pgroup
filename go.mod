@@ -4,7 +4,10 @@ go 1.21.4
 
 require (
 	git.mrcyjanek.net/p3pch4t/p3pgo v0.0.0
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+	github.com/google/uuid v1.4.0
 	github.com/joho/godotenv v1.5.1
+	gorm.io/gorm v1.25.5
 )
 
 replace git.mrcyjanek.net/p3pch4t/p3pgo v0.0.0 => ../p3pgo
@@ -16,7 +19,6 @@ require (
 	github.com/cavaliergopher/grab/v3 v3.0.1 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/go-chi/chi/v5 v5.0.10 // indirect
-	github.com/google/uuid v1.4.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -28,6 +30,5 @@ require (
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
 	gorm.io/driver/sqlite v1.5.4 // indirect
-	gorm.io/gorm v1.25.5 // indirect
 	moul.io/http2curl v1.0.0 // indirect
 )

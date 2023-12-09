@@ -11,6 +11,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+var botPi *core.PrivateInfoS
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -29,18 +31,21 @@ func main() {
 	if err != nil {
 		log.Fatalln("LOCAL_SERVER_PORT", err)
 	}
-	pi := core.OpenPrivateInfo(path.Join(os.Getenv("HOME"), ".config", ".p3pgroup"), "Group Host", "")
-	pi.Endpoint = core.Endpoint(os.Getenv("PRIVATEINFO_ROOT_ENDPOINT"))
-	pi.MessageCallback = append(pi.MessageCallback, botMsgHandler)
-	if !pi.IsAccountReady() {
-		pi.Create("Group Host", "no@no.no", 4096)
+	botPi = core.OpenPrivateInfo(path.Join(os.Getenv("HOME"), ".config", ".p3pgroup"), "Group Host", "")
+	botPi.Endpoint = core.Endpoint(os.Getenv("PRIVATEINFO_ROOT_ENDPOINT"))
+	botPi.MessageCallback = append(botPi.MessageCallback, botMsgHandler)
+	botPi.IntroduceCallback = append(botPi.IntroduceCallback, botIntroduceHandler)
+	dbAutoMigrateBot(botPi)
+	if !botPi.IsAccountReady() {
+		botPi.Create("Group Host", "no@no.no", 4096)
 	}
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	log.Println("p3p is running...")
-	log.Println("Group Server is available at:", pi.Endpoint)
-
+	loadGroups()
+	log.Println("Groups loaded")
+	log.Println("Group Server is available at:", botPi.Endpoint)
 	for sig := range c {
 		log.Println("Closing [", sig, "] ...")
 		return
