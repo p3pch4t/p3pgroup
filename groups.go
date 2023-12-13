@@ -36,7 +36,7 @@ func createGroup(ownerKeyID string, groupName string, groupEmail string) string 
 		OwnerKeyID:   ownerKeyID,
 	}
 
-	groups[uniqueKey].pi = core.OpenPrivateInfo(path.Join(os.Getenv("HOME"), ".config", ".p3pgroup"), groupName, uniqueKey)
+	groups[uniqueKey].pi = core.OpenPrivateInfo(path.Join(os.Getenv("HOME"), ".config", ".p3pgroup"), groupName, uniqueKey, true)
 	groups[uniqueKey].pi.Endpoint = core.Endpoint(string(botPi.Endpoint) + "/" + uniqueKey)
 	if !groups[uniqueKey].pi.IsAccountReady() {
 		groups[uniqueKey].pi.Create(groupName, groupEmail, 4096)
@@ -54,35 +54,45 @@ func loadGroups() {
 		if !ok {
 			log.Println("Loading group:", p3pgi[i].GroupName, p3pgi[i].UniqueKey)
 			groups[p3pgi[i].UniqueKey] = &p3pgi[i]
-			groups[p3pgi[i].UniqueKey].pi = core.OpenPrivateInfo(path.Join(os.Getenv("HOME"), ".config", ".p3pgroup"), p3pgi[i].GroupName, p3pgi[i].UniqueKey)
+			groups[p3pgi[i].UniqueKey].pi = core.OpenPrivateInfo(path.Join(os.Getenv("HOME"), ".config", ".p3pgroup"), p3pgi[i].GroupName, p3pgi[i].UniqueKey, true)
 			dbAutoMigrateGroup(groups[p3pgi[i].UniqueKey].pi)
 			groups[p3pgi[i].UniqueKey].pi.MessageCallback = append(groups[p3pgi[i].UniqueKey].pi.MessageCallback, groupMsgHandler)
 			groups[p3pgi[i].UniqueKey].pi.IntroduceCallback = append(groups[p3pgi[i].UniqueKey].pi.IntroduceCallback, groupIntroduceHandler)
 			groups[p3pgi[i].UniqueKey].pi.FileStoreElementCallback = append(groups[p3pgi[i].UniqueKey].pi.FileStoreElementCallback, groupFseCallback)
+			go groups[p3pgi[i].UniqueKey].pi.EventQueueRunner()
 		}
 	}
 }
 
 func groupFseCallback(pi *core.PrivateInfoS, ui *core.UserInfo, fse *core.FileStoreElement, completed bool) {
-	if !completed {
-		log.Println("ignoring incomplete download")
-		return
-	}
+	groupSendEventToAll(pi, &core.Event{
+		EventType: core.EventTypeFile,
+		Data: core.EventDataMixed{
+			EventDataFile: core.EventDataFile{
+				Uuid:       fse.Uuid,
+				HttpPath:   fse.ExternalHttpPath,
+				Path:       fse.Path,
+				Sha512sum:  fse.Sha512sum,
+				SizeBytes:  fse.SizeBytes,
+				IsDeleted:  fse.IsDeleted,
+				ModifyTime: fse.ModifyTime,
+			},
+		},
+		Uuid: fse.Uuid,
+	}, ui.GetKeyID())
+}
+func groupSendEventToAll(pi *core.PrivateInfoS, evt *core.Event, exceptUserKeyID string) {
 	uis := pi.GetAllUserInfo()
 	for _, targetUi := range uis {
-		if targetUi.KeyID == ui.KeyID {
+		if targetUi.GetKeyID() == exceptUserKeyID {
 			continue
 		}
 		mui := getMemberMetadata(pi, targetUi)
 		if mui.IsUserBanned {
 			continue
 		}
-		targetFse := pi.CreateFileStoreElement(targetUi.GetKeyID(), fse.Uuid, fse.Path, fse.LocalPath(), fse.ModifyTime, "")
-		targetFse.UpdateContent(pi, true)
+		core.QueueEvent(pi, *evt, targetUi)
 	}
-}
-func groupSendEventToAll(pi *core.PrivateInfoS, evt *core.Event, exceptUserKeyID string) {
-
 }
 
 func getGroupInfo(pi *core.PrivateInfoS) *P3PGROUP_GroupInfo {

@@ -31,11 +31,13 @@ func main() {
 	if err != nil {
 		log.Fatalln("LOCAL_SERVER_PORT", err)
 	}
-	botPi = core.OpenPrivateInfo(path.Join(os.Getenv("HOME"), ".config", ".p3pgroup"), "Group Host", "")
+	botPi = core.OpenPrivateInfo(path.Join(os.Getenv("HOME"), ".config", ".p3pgroup"), "Group Host", "", true)
 	botPi.Endpoint = core.Endpoint(os.Getenv("PRIVATEINFO_ROOT_ENDPOINT"))
 	botPi.MessageCallback = append(botPi.MessageCallback, botMsgHandler)
 	botPi.IntroduceCallback = append(botPi.IntroduceCallback, botIntroduceHandler)
+	go botPi.EventQueueRunner()
 	dbAutoMigrateBot(botPi)
+
 	if !botPi.IsAccountReady() {
 		botPi.Create("Group Host", "no@no.no", 4096)
 	}
