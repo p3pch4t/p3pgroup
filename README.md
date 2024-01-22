@@ -44,10 +44,13 @@ First figure your local i2p address (`PRIVATEINFO_ROOT_ENDPOINT` in .env)
 
 ```bash
 $ printf "i2p://%s.b32.i2p\n" $(sudo head -c 391 /var/lib/i2pd/p3pgroup.dat | sha256sum | xxd -r -p | base32 | sed s/=//g | tr A-Z a-z)
+i2p://smth.b32.i2p
 ```
 
 # .env:
 
-PRIVATEINFO_ROOT_ENDPOINT=i2p://t4dinrmn3ta24zgc67mwfzi5urqwh5ko2cb2oflx27ltkm3z25ga.b32.i2p
+```env
+PRIVATEINFO_ROOT_ENDPOINT=i2p://smth.b32.i2p
 I2P_HTTP_PROXY=http://127.0.0.1:4567
 LOCAL_SERVER_PORT=3894
+```

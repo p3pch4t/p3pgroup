@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"git.mrcyjanek.net/p3pch4t/p3pgo/lib/core"
+	"git.mrcyjanek.net/p3pch4t/p3pgroup/structs"
 	"github.com/google/shlex"
 )
 
@@ -37,8 +38,8 @@ func botMsgHandler(pi *core.PrivateInfoS, ui *core.UserInfo, evt *core.Event, ms
 		pi.SendMessage(ui, core.MessageTypeText, "Group Created. ID: `"+groupId+"`")
 	case "!list":
 		var text = "Groups:\n"
-		for _, info := range groups {
-			text += fmt.Sprintf("- %s (`%s`)\n", info.GroupName, info.pi.Endpoint)
+		for _, info := range structs.Groups {
+			text += fmt.Sprintf("- %s (`%s`)\n", info.GroupName, info.PI.Endpoint)
 		}
 		pi.SendMessage(ui, core.MessageTypeText, text)
 	case "!details":
